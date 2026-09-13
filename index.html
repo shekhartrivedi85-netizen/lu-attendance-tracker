@@ -127,6 +127,7 @@
   </main>
 
   <script>
+    // Aapka naya Web App URL yahan set kar diya gaya hai:
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzObRm_ZG9dzkHAbdeOQIPaLMDjAM2jP7ScmfQK-rdEOI6uAJhnlQu2gcG-Aznkw244/exec";
     let allLogs = [];
 
@@ -218,7 +219,6 @@
 
       const parseMinutes = (tStr) => {
         const [h, m] = tStr.split(':').map(Number);
-        // College timing (8:20 to 12:30 is AM, 1:30 to 4:00 is PM)
         let hours24 = h;
         if (h < 7) hours24 += 12; // 1:30 -> 13:30, 2:20 -> 14:20, etc.
         return hours24 * 60 + m;
