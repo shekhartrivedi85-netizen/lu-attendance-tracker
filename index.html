@@ -118,14 +118,14 @@
   </main>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzObRm_ZG9dzkHAbdeOQIPaLMDjAM2jP7ScmfQK-rdEOI6uAJhnlQu2gcG-Aznkw244/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqKD1lHxD-gtV2EuE7ZMr9R1vkoxRWwPAGp7mguk1OUR2r9DCUT_LfI168MKvuoT5L/exec";
     let allLogs = [];
 
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       setToday();
       loadData();
-      setInterval(renderDailyView, 30000); // Har 30 sec me check karega ki kaunsi class live chal rahi hai
+      setInterval(renderDailyView, 30000); // Har 30 second me live period check karega
     });
 
     function setSyncStatus(text, color = 'emerald') {
@@ -143,7 +143,7 @@
         renderAnalyticsView();
       } catch (err) {
         setSyncStatus('Sync Failed', 'rose');
-        console.error(err);
+        console.error("Load Error:", err);
       }
     }
 
@@ -182,7 +182,7 @@
       renderDailyView();
     }
 
-    // 🕒 Live Feed Detection Function
+    // 🕒 Live Period Detection
     function getLivePeriodStatus(slotStr, isToday) {
       if (!isToday) return { status: 'none', label: '' };
 
@@ -192,8 +192,7 @@
       const parseMinutes = (tStr) => {
         const [h, m] = tStr.split(':').map(Number);
         let hours24 = h;
-        // College slot: 1:00 to 5:40 PM conversion
-        if (h < 8) hours24 += 12;
+        if (h < 8) hours24 += 12; // Afternoon period conversion
         return hours24 * 60 + m;
       };
 
@@ -276,13 +275,14 @@
       try {
         await fetch(SCRIPT_URL, {
           method: 'POST',
+          mode: 'no-cors', // CORS block hatane ke liye
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ date, slot, code, status: newStatus })
         });
         setSyncStatus('Ready', 'emerald');
       } catch (err) {
-        setSyncStatus('Save Failed', 'rose');
-        console.error(err);
+        setSyncStatus('Sync Failed', 'rose');
+        console.error("Save Error:", err);
       }
     }
 
