@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1B365D">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FET Attendance">
+  <title>FET Attendance Tracker - AI 3 (P1)</title>
+
+  <!-- Favicon & App Icon (SVG Embedded) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231B365D'/%3E%3Cstop offset='100%25' stop-color='%230D1B2A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='110' fill='url(%23grad)'/%3E%3Ccircle cx='256' cy='256' r='200' fill='none' stroke='%2338BDF8' stroke-width='14' stroke-dasharray='12 8' opacity='0.7'/%3E%3Cpath d='M256 120 L350 170 L256 220 L162 170 Z' fill='%23F59E0B'/%3E%3Cpath d='M190 200 L190 260 C190 295 322 295 322 260 L322 200' fill='none' stroke='%23F59E0B' stroke-width='14' stroke-linecap='round'/%3E%3Ctext x='50%25' y='68%25' font-size='100' font-family='Arial, sans-serif' font-weight='900' fill='white' text-anchor='middle'%3E75%25%3C/text%3E%3Ctext x='50%25' y='82%25' font-size='38' font-family='Arial, sans-serif' font-weight='bold' fill='%2338BDF8' text-anchor='middle' letter-spacing='4'%3EFET AI-3%3C/text%3E%3C/svg%3E">
+  
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%231B365D'/%3E%3Ctext x='50%25' y='55%25' font-size='170' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'%3E75%25%3C/text%3E%3C/svg%3E">
+
+  <!-- Progressive Web App (PWA) Manifest -->
+  <link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22FET%20Attendance%20AI3%20P1%22%2C%22short_name%22%3A%22FET%20Attend%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231B365D%22%2C%22theme_color%22%3A%22%231B365D%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20512%20512'%3E%3Crect%20width%3D'512'%20height%3D'512'%20rx%3D'110'%20fill%3D'%231B365D'%2F%3E%3Ctext%20x%3D'50%25'%20y%3D'55%25'%20font-size%3D'170'%20font-weight%3D'bold'%20fill%3D'white'%20text-anchor%3D'middle'%20dominant-baseline%3D'middle'%3E75%25%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    .badge-P { background-color: #C6EFCE; color: #006100; font-weight: bold; border-color: #A3D8A2; }
+    .badge-A { background-color: #FFC7CE; color: #9C0006; font-weight: bold; border-color: #F19EA6; }
+    .badge-NA { background-color: #FFEB9C; color: #9C6500; font-weight: bold; border-color: #E2CD78; }
+    .shake { animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-3px, 0, 0); }
+      30%, 70% { transform: translate3d(5px, 0, 0); }
+      50% { transform: translate3d(-5px, 0, 0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+
+  <!-- PIN LOCK SCREEN -->
+  <div id="pinScreen" class="fixed inset-0 bg-[#1B365D] z-50 flex flex-col items-center justify-center p-4">
+    <div id="pinCard" class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-xs text-center">
+      <!-- App Logo inside Lock -->
+      <div class="w-16 h-16 mx-auto mb-3">
+        <svg viewBox="0 0 512 512" class="w-full h-full drop-shadow-md">
+          <rect width="512" height="512" rx="110" fill="#1B365D"/>
+          <circle cx="256" cy="256" r="200" fill="none" stroke="#38BDF8" stroke-width="16" stroke-dasharray="16 10"/>
+          <path d="M256 130 L350 180 L256 230 L162 180 Z" fill="#F59E0B"/>
+          <path d="M190 205 L190 260 C190 295 322 295 322 260 L322 205" fill="none" stroke="#F59E0B" stroke-width="14" stroke-linecap="round"/>
+          <text x="50%" y="72%" font-size="120" font-family="sans-serif" font-weight="900" fill="white" text-anchor="middle">75%</text>
+        </svg>
+      </div>
+      <h2 class="text-xl font-black text-slate-800 tracking-tight">FET Lucknow AI-3 P1</h2>
+      <p class="text-xs text-slate-500 mb-6 font-medium">Enter 4-digit PIN to unlock</p>
+      
+      <div class="flex justify-center space-x-4 mb-7">
+        <div class="dot w-4 h-4 rounded-full border-2 border-slate-300 transition-all duration-200"></div>
+        <div class="dot w-4 h-4 rounded-full border-2 border-slate-300 transition-all duration-200"></div>
+        <div class="dot w-4 h-4 rounded-full border-2 border-slate-300 transition-all duration-200"></div>
+        <div class="dot w-4 h-4 rounded-full border-2 border-slate-300 transition-all duration-200"></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5 text-lg font-bold">
+        <button onclick="pressKey('1')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">1</button>
+        <button onclick="pressKey('2')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">2</button>
+        <button onclick="pressKey('3')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">3</button>
+        <button onclick="pressKey('4')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">4</button>
+        <button onclick="pressKey('5')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">5</button>
+        <button onclick="pressKey('6')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">6</button>
+        <button onclick="pressKey('7')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">7</button>
+        <button onclick="pressKey('8')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">8</button>
+        <button onclick="pressKey('9')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">9</button>
+        <button onclick="clearPin()" class="py-3.5 text-xs text-red-600 active:bg-red-50 rounded-2xl font-bold">CLEAR</button>
+        <button onclick="pressKey('0')" class="py-3.5 bg-slate-50 active:bg-slate-200 rounded-2xl shadow-xs">0</button>
+        <button onclick="deleteKey()" class="py-3.5 text-slate-600 active:bg-slate-200 rounded-2xl text-lg">⌫</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="mainApp" class="max-w-7xl mx-auto p-3 sm:p-6 pb-24">
+    <!-- Header with Custom App Logo -->
+    <header class="bg-[#1B365D] text-white p-4 sm:p-5 rounded-2xl shadow-md mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl overflow-hidden shadow-md flex-shrink-0 bg-white/10 p-1 border border-white/20">
+          <svg viewBox="0 0 512 512" class="w-full h-full">
+            <rect width="512" height="512" rx="110" fill="#1B365D"/>
+            <path d="M256 130 L350 180 L256 230 L162 180 Z" fill="#F59E0B"/>
+            <path d="M190 205 L190 260 C190 295 322 295 322 260 L322 205" fill="none" stroke="#F59E0B" stroke-width="16" stroke-linecap="round"/>
+            <text x="50%" y="74%" font-size="140" font-family="sans-serif" font-weight="900" fill="white" text-anchor="middle">75%</text>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="bg-blue-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wide">Batch P1</span>
+            <span class="text-xs text-blue-200">Room 205 (O)</span>
+          </div>
+          <h1 class="text-base sm:text-xl font-black tracking-tight mt-0.5">Faculty of Engg & Tech, Lucknow</h1>
+          <p class="text-[11px] sm:text-xs text-blue-200">Attendance Tracker & Predictor System</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2 flex-wrap">
+        <button onclick="exportToExcelFile()" class="px-3 py-2 bg-emerald-600 active:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1.5">
+          <span>📊</span> Export Excel
+        </button>
+        <button onclick="downloadPDFReport()" class="px-3 py-2 bg-rose-600 active:bg-rose-700 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1.5">
+          <span>📄</span> Download PDF
+        </button>
+        <button onclick="lockApp()" class="p-2 bg-slate-700 active:bg-slate-600 text-white text-sm rounded-xl" title="Lock App">🔒</button>
+      </div>
+    </header>
+
+    <!-- LIVE CLASS ATTENDANCE MARKER -->
+    <div id="liveClassWidget" class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 rounded-2xl shadow-md mb-4 border border-blue-700/50">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </div>
+          <div>
+            <div class="text-[11px] font-bold text-blue-300 uppercase tracking-wider flex items-center gap-2">
+              <span>LIVE ONGOING CLASS</span>
+              <span id="liveTimeStr" class="text-white font-mono bg-blue-800/80 px-1.5 py-0.5 rounded text-[10px]"></span>
+            </div>
+            <div id="liveSubjectTitle" class="text-base sm:text-lg font-black mt-0.5">Checking lecture...</div>
+            <div id="liveTeacherName" class="text-xs text-blue-200">Batch P1 Schedule</div>
+          </div>
+        </div>
+
+        <div id="liveActionsGroup" class="flex items-center gap-1.5 flex-wrap"></div>
+      </div>
+    </div>
+
+    <!-- MISSED ATTENDANCE ALERT -->
+    <div id="missedAlertBar" class="hidden bg-amber-50 border border-amber-300 text-amber-900 px-4 py-3 rounded-2xl mb-4 flex items-center justify-between gap-3 shadow-xs">
+      <div class="flex items-center gap-2 text-xs sm:text-sm font-semibold">
+        <span class="text-lg">⚠️</span>
+        <span id="missedAlertText">Unmarked past lectures!</span>
+      </div>
+      <button onclick="openMissedModal()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl whitespace-nowrap shadow-xs">
+        Fill Missed
+      </button>
+    </div>
+
+    <!-- KPI STATS CARDS -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <div class="bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200">
+        <div class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Held</div>
+        <div id="kpiHeld" class="text-2xl font-black text-slate-800 mt-1">0</div>
+        <div class="text-[11px] text-slate-500 font-medium mt-0.5">Out of <span id="kpiTotalSched" class="font-bold">149</span> Sched</div>
+      </div>
+      <div class="bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200">
+        <div class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Attended (P)</div>
+        <div id="kpiAttended" class="text-2xl font-black text-emerald-600 mt-1">0</div>
+        <div class="text-[11px] text-slate-500 font-medium mt-0.5">Absent: <span id="kpiAbsent" class="font-bold text-red-600">0</span></div>
+      </div>
+      <div class="bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200">
+        <div class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Overall %</div>
+        <div id="kpiPercent" class="text-2xl font-black text-blue-700 mt-1">0.0%</div>
+        <div id="kpiStatus" class="text-[10px] font-black mt-0.5 text-slate-400">NO CLASSES</div>
+      </div>
+      <div class="bg-white p-3.5 rounded-2xl shadow-xs border border-slate-200">
+        <div class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Remaining</div>
+        <div id="kpiRemaining" class="text-2xl font-black text-indigo-700 mt-1">149</div>
+        <div class="text-[11px] text-slate-500 font-medium mt-0.5">Till 02-Nov-2026</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="flex border-b border-slate-200 mb-4 text-xs sm:text-sm font-bold gap-1 bg-white p-1 rounded-xl shadow-xs">
+      <button onclick="switchTab('trackerTab')" id="btn-trackerTab" class="flex-1 py-2 rounded-lg bg-[#1B365D] text-white">75% Tracker</button>
+      <button onclick="switchTab('theoryTab')" id="btn-theoryTab" class="flex-1 py-2 rounded-lg text-slate-600 hover:text-slate-900">Theory Log</button>
+      <button onclick="switchTab('practicalTab')" id="btn-practicalTab" class="flex-1 py-2 rounded-lg text-slate-600 hover:text-slate-900">Practical Log</button>
+    </div>
+
+    <!-- TAB 1: 75% TRACKER -->
+    <div id="trackerTab" class="tab-pane">
+      <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4 mb-4">
+        <h3 class="font-black text-slate-800 text-sm mb-3">Theory Subjects (75% Analysis)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-2.5">Code</th><th class="p-2.5">Subject</th><th class="p-2.5 text-center">Sched</th>
+                <th class="p-2.5 text-center">Held</th><th class="p-2.5 text-center">P</th><th class="p-2.5 text-center">A</th>
+                <th class="p-2.5 text-center">Attd %</th><th class="p-2.5 text-center">Safe Bunks</th><th class="p-2.5 text-center">Need</th><th class="p-2.5 text-center">Rem</th>
+              </tr>
+            </thead>
+            <tbody id="theoryTrackerBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4">
+        <h3 class="font-black text-slate-800 text-sm mb-3">Practical & Tutorial Subjects (Batch P1)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-2.5">Code</th><th class="p-2.5">Lab</th><th class="p-2.5 text-center">Sched</th>
+                <th class="p-2.5 text-center">Held</th><th class="p-2.5 text-center">P</th><th class="p-2.5 text-center">A</th>
+                <th class="p-2.5 text-center">Attd %</th><th class="p-2.5 text-center">Safe Bunks</th><th class="p-2.5 text-center">Need</th><th class="p-2.5 text-center">Rem</th>
+              </tr>
+            </thead>
+            <tbody id="practicalTrackerBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: THEORY LOG -->
+    <div id="theoryTab" class="tab-pane hidden">
+      <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4">
+        <h3 class="font-black text-slate-800 text-sm mb-2">Daily Theory Attendance Log</h3>
+        <div class="overflow-x-auto max-h-[580px] border border-slate-100 rounded-xl">
+          <table class="w-full text-xs text-center border-collapse">
+            <thead class="bg-slate-100 sticky top-0 border-b border-slate-200 text-slate-700 font-bold z-10">
+              <tr>
+                <th class="p-2.5 text-left">Date</th><th class="p-2.5">Day</th><th class="p-2.5">BSM 101</th><th class="p-2.5">BSM 104</th>
+                <th class="p-2.5">RCS 101</th><th class="p-2.5">RCM 101</th><th class="p-2.5">RAI 101</th>
+                <th class="p-2.5">Held</th><th class="p-2.5">P</th><th class="p-2.5">%</th>
+              </tr>
+            </thead>
+            <tbody id="theoryLogBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PRACTICAL LOG -->
+    <div id="practicalTab" class="tab-pane hidden">
+      <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-4">
+        <h3 class="font-black text-slate-800 text-sm mb-2">Daily Practical Log (Batch P1)</h3>
+        <div class="overflow-x-auto max-h-[580px] border border-slate-100 rounded-xl">
+          <table class="w-full text-xs text-center border-collapse">
+            <thead class="bg-slate-100 sticky top-0 border-b border-slate-200 text-slate-700 font-bold z-10">
+              <tr>
+                <th class="p-2.5 text-left">Date</th><th class="p-2.5">Day</th><th class="p-2.5">BSM 104 P1</th><th class="p-2.5">BSM 101 T1</th>
+                <th class="p-2.5">RCM 101 P1</th><th class="p-2.5">RCS 101 P1</th>
+                <th class="p-2.5">Held</th><th class="p-2.5">P</th><th class="p-2.5">%</th>
+              </tr>
+            </thead>
+            <tbody id="practicalLogBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSED MODAL -->
+  <div id="missedModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-4 bg-amber-500 text-white flex items-center justify-between">
+        <h3 class="font-black text-base">⚠️ Missed Past Lectures</h3>
+        <button onclick="closeMissedModal()" class="font-bold text-lg">✕</button>
+      </div>
+      <div id="missedListContent" class="p-4 overflow-y-auto space-y-2 flex-1 text-xs sm:text-sm"></div>
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <button onclick="closeMissedModal()" class="px-4 py-2 bg-slate-700 text-white font-bold rounded-xl text-xs">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let enteredPin = "";
+    const correctPin = "4603";
+
+    function pressKey(d) {
+      if (enteredPin.length < 4) {
+        enteredPin += d; updateDots();
+        if (enteredPin.length === 4) setTimeout(verifyPin, 120);
+      }
+    }
+    function deleteKey() { enteredPin = enteredPin.slice(0, -1); updateDots(); }
+    function clearPin() { enteredPin = ""; updateDots(); }
+    function updateDots() {
+      document.querySelectorAll(".dot").forEach((dot, i) => {
+        dot.className = i < enteredPin.length ? "dot w-4 h-4 rounded-full bg-[#1B365D] border-2 border-[#1B365D]" : "dot w-4 h-4 rounded-full border-2 border-slate-300";
+      });
+    }
+    function verifyPin() {
+      if (enteredPin === correctPin) {
+        document.getElementById("pinScreen").classList.add("hidden"); clearPin(); checkMissed();
+      } else {
+        const c = document.getElementById("pinCard"); c.classList.add("shake");
+        setTimeout(() => { c.classList.remove("shake"); clearPin(); }, 400);
+      }
+    }
+    function lockApp() { document.getElementById("pinScreen").classList.remove("hidden"); }
+
+    function switchTab(id) {
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+      ["trackerTab", "theoryTab", "practicalTab"].forEach(t => {
+        document.getElementById("btn-" + t).className = t === id ? "flex-1 py-2 rounded-lg bg-[#1B365D] text-white font-bold" : "flex-1 py-2 rounded-lg text-slate-600 font-bold";
+      });
+    }
+
+    const theorySubjects = [
+      { code: "BSM 101", name: "Engineering Mathematics-I", teacher: "Dr. Rachana Pathak / Dr. Pushpendra Verma", scheduled: 23 },
+      { code: "BSM 104", name: "Environmental Science & Green Chem", teacher: "Prof. R. M. Naik", scheduled: 23 },
+      { code: "RCS 101", name: "Problem Solving using Python", teacher: "Er. Nikhate Ujma Khan", scheduled: 23 },
+      { code: "RCM 101", name: "Engineering Mechanics & CADD", teacher: "Er. Gaurav Pratap Singh", scheduled: 24 },
+      { code: "RAI 101", name: "Fundamentals of AI", teacher: "Dr. Rohit Srivastava", scheduled: 24 }
+    ];
+    const practicalSubjects = [
+      { code: "BSM 104 P1", name: "Env Science & Chem Lab", teacher: "Prof. R. M. Naik / Dr. Ranvijay Pratap Singh", scheduled: 8 },
+      { code: "BSM 101 T1", name: "Maths-I Tutorial", teacher: "Dr. Rachana Pathak / Dr. Pushpendra Verma", scheduled: 8 },
+      { code: "RCM 101 P1", name: "Mechanics & CADD Lab", teacher: "Er. Abdulla Aiman / Er. Yogesh Pathak", scheduled: 8 },
+      { code: "RCS 101 P1", name: "Python Lab", teacher: "Er. Nikhate Ujma Khan", scheduled: 8 }
+    ];
+
+    function genDates() {
+      const arr = []; let d = new Date(2026, 8, 7); const end = new Date(2026, 10, 2);
+      while(d <= end) { arr.push(new Date(d)); d.setDate(d.getDate() + 1); }
+      return arr;
+    }
+    const calendarDates = genDates();
+    let theoryAttendance = JSON.parse(localStorage.getItem("thAttd") || "{}");
+    let practicalAttendance = JSON.parse(localStorage.getItem("prAttd") || "{}");
+
+    function getSched(dt) {
+      const day = dt.getDay();
+      const th = { "BSM 101": false, "BSM 104": false, "RCS 101": false, "RCM 101": false, "RAI 101": false };
+      const pr = { "BSM 104 P1": false, "BSM 101 T1": false, "RCM 101 P1": false, "RCS 101 P1": false };
+      if (day === 1) { th["RCS 101"] = true; th["BSM 104"] = true; pr["BSM 104 P1"] = true; }
+      else if (day === 2) { th["RCS 101"] = true; th["BSM 104"] = true; pr["BSM 101 T1"] = true; }
+      else if (day === 3) { th["RCM 101"] = true; th["RAI 101"] = true; th["BSM 101"] = true; pr["RCM 101 P1"] = true; }
+      else if (day === 4) { th["RCM 101"] = true; th["RAI 101"] = true; th["RCS 101"] = true; th["BSM 101"] = true; }
+      else if (day === 5) { th["RCM 101"] = true; th["RAI 101"] = true; th["BSM 104"] = true; th["BSM 101"] = true; pr["RCS 101 P1"] = true; }
+      return { th, pr };
+    }
+
+    function setAttd(type, dStr, code, val) {
+      const store = type === 'th' ? theoryAttendance : practicalAttendance;
+      if (!store[dStr]) store[dStr] = {};
+      if (val === "") delete store[dStr][code]; else store[dStr][code] = val;
+      localStorage.setItem(type === 'th' ? "thAttd" : "prAttd", JSON.stringify(store));
+      render();
+    }
+
+    function cycle(type, dStr, code) {
+      const store = type === 'th' ? theoryAttendance : practicalAttendance;
+      const cur = (store[dStr] && store[dStr][code]) || "";
+      const nxt = cur === "" ? "P" : (cur === "P" ? "A" : (cur === "A" ? "NA" : ""));
+      setAttd(type, dStr, code, nxt);
+    }
+
+    function updateLive() {
+      const now = new Date(); const day = now.getDay(); const m = now.getHours() * 60 + now.getMinutes();
+      const dStr = now.toISOString().split("T")[0];
+      let cur = null, type = "th", timeStr = "";
+
+      if (day === 1) {
+        if (m >= 600 && m < 700) { cur = "BSM 104 P1"; timeStr = "10:00-11:40 AM"; type = "pr"; }
+        else if (m >= 700 && m < 750) { cur = "RCS 101"; timeStr = "11:40-12:30 PM"; }
+        else if (m >= 750 && m < 800) { cur = "BSM 104"; timeStr = "12:30-01:20 PM"; }
+      } else if (day === 2) {
+        if (m >= 650 && m < 700) { cur = "BSM 101 T1"; timeStr = "10:50-11:40 AM"; type = "pr"; }
+        else if (m >= 700 && m < 750) { cur = "RCS 101"; timeStr = "11:40-12:30 PM"; }
+        else if (m >= 750 && m < 800) { cur = "BSM 104"; timeStr = "12:30-01:20 PM"; }
+      } else if (day === 3) {
+        if (m >= 650 && m < 700) { cur = "RCM 101"; timeStr = "10:50-11:40 AM"; }
+        else if (m >= 700 && m < 750) { cur = "RAI 101"; timeStr = "11:40-12:30 PM"; }
+        else if (m >= 750 && m < 800) { cur = "BSM 101"; timeStr = "12:30-01:20 PM"; }
+        else if (m >= 860 && m < 960) { cur = "RCM 101 P1"; timeStr = "02:20-04:00 PM"; type = "pr"; }
+      } else if (day === 4) {
+        if (m >= 600 && m < 650) { cur = "RCM 101"; timeStr = "10:00-10:50 AM"; }
+        else if (m >= 650 && m < 700) { cur = "RAI 101"; timeStr = "10:50-11:40 AM"; }
+        else if (m >= 700 && m < 750) { cur = "RCS 101"; timeStr = "11:40-12:30 PM"; }
+        else if (m >= 750 && m < 800) { cur = "BSM 101"; timeStr = "12:30-01:20 PM"; }
+      } else if (day === 5) {
+        if (m >= 600 && m < 650) { cur = "RCM 101"; timeStr = "10:00-10:50 AM"; }
+        else if (m >= 650 && m < 700) { cur = "RAI 101"; timeStr = "10:50-11:40 AM"; }
+        else if (m >= 700 && m < 750) { cur = "BSM 104"; timeStr = "11:40-12:30 PM"; }
+        else if (m >= 750 && m < 800) { cur = "BSM 101"; timeStr = "12:30-01:20 PM"; }
+        else if (m >= 860 && m < 960) { cur = "RCS 101 P1"; timeStr = "02:20-04:00 PM"; type = "pr"; }
+      }
+
+      const tEl = document.getElementById("liveSubjectTitle");
+      const aEl = document.getElementById("liveActionsGroup");
+      if (cur) {
+        document.getElementById("liveTimeStr").innerText = timeStr;
+        tEl.innerText = cur;
+        const store = type === 'th' ? theoryAttendance : practicalAttendance;
+        const status = store[dStr]?.[cur] || "";
+        aEl.innerHTML = `
+          <button onclick="setAttd('${type}','${dStr}','${cur}','P')" class="px-3 py-1.5 rounded-xl font-bold text-xs ${status==='P'?'bg-emerald-500 text-white':'bg-emerald-100 text-emerald-800'}">P</button>
+          <button onclick="setAttd('${type}','${dStr}','${cur}','A')" class="px-3 py-1.5 rounded-xl font-bold text-xs ${status==='A'?'bg-rose-500 text-white':'bg-rose-100 text-rose-800'}">A</button>
+          <button onclick="setAttd('${type}','${dStr}','${cur}','NA')" class="px-3 py-1.5 rounded-xl font-bold text-xs ${status==='NA'?'bg-amber-400 text-black':'bg-amber-100 text-amber-800'}">NA</button>
+          ${status ? `<button onclick="setAttd('${type}','${dStr}','${cur}','')" class="px-2 py-1.5 bg-slate-800 text-white rounded-xl text-xs">🗑</button>` : ''}
+        `;
+      } else {
+        document.getElementById("liveTimeStr").innerText = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+        tEl.innerText = "No Class Ongoing Right Now";
+        aEl.innerHTML = `<span class="text-xs text-blue-200">No scheduled lecture</span>`;
+      }
+    }
+
+    function render() {
+      // Theory Log
+      const thB = document.getElementById("theoryLogBody"); thB.innerHTML = "";
+      calendarDates.forEach(dt => {
+        const dStr = dt.toISOString().split("T")[0];
+        const sc = getSched(dt).th; const rec = theoryAttendance[dStr] || {};
+        let h = 0, p = 0, cells = "";
+        theorySubjects.forEach(s => {
+          if (!sc[s.code]) cells += `<td class="p-2 text-slate-300">-</td>`;
+          else {
+            const v = rec[s.code] || "";
+            if (v === "P" || v === "A") h++; if (v === "P") p++;
+            cells += `<td class="p-1"><button onclick="cycle('th', '${dStr}', '${s.code}')" class="w-8 h-7 rounded text-xs font-bold ${v ? 'badge-' + v : 'bg-slate-100 text-slate-400'}">${v || "—"}</button></td>`;
+          }
+        });
+        const pct = h > 0 ? ((p / h) * 100).toFixed(0) + "%" : "-";
+        thB.innerHTML += `<tr><td class="p-2 text-left font-bold text-slate-700">${dt.toLocaleDateString('en-GB', { day:'2-digit', month:'short' })}</td><td class="p-2 text-slate-400">${dt.toLocaleDateString('en-US', { weekday:'short' })}</td>${cells}<td class="p-2 font-bold">${h}</td><td class="p-2 font-bold text-emerald-600">${p}</td><td class="p-2 font-black">${pct}</td></tr>`;
+      });
+
+      // Practical Log
+      const prB = document.getElementById("practicalLogBody"); prB.innerHTML = "";
+      calendarDates.forEach(dt => {
+        const dStr = dt.toISOString().split("T")[0];
+        const sc = getSched(dt).pr; const rec = practicalAttendance[dStr] || {};
+        let h = 0, p = 0, cells = "";
+        practicalSubjects.forEach(s => {
+          if (!sc[s.code]) cells += `<td class="p-2 text-slate-300">-</td>`;
+          else {
+            const v = rec[s.code] || "";
+            if (v === "P" || v === "A") h++; if (v === "P") p++;
+            cells += `<td class="p-1"><button onclick="cycle('pr', '${dStr}', '${s.code}')" class="w-8 h-7 rounded text-xs font-bold ${v ? 'badge-' + v : 'bg-slate-100 text-slate-400'}">${v || "—"}</button></td>`;
+          }
+        });
+        const pct = h > 0 ? ((p / h) * 100).toFixed(0) + "%" : "-";
+        prB.innerHTML += `<tr><td class="p-2 text-left font-bold text-slate-700">${dt.toLocaleDateString('en-GB', { day:'2-digit', month:'short' })}</td><td class="p-2 text-slate-400">${dt.toLocaleDateString('en-US', { weekday:'short' })}</td>${cells}<td class="p-2 font-bold">${h}</td><td class="p-2 font-bold text-emerald-600">${p}</td><td class="p-2 font-black">${pct}</td></tr>`;
+      });
+
+      // Stats
+      let totH = 0, totP = 0;
+      const thT = document.getElementById("theoryTrackerBody"); thT.innerHTML = "";
+      theorySubjects.forEach(s => {
+        let h = 0, p = 0;
+        Object.values(theoryAttendance).forEach(d => { if (d[s.code] === "P") { h++; p++; } else if (d[s.code] === "A") h++; });
+        totH += h; totP += p;
+        const pct = h > 0 ? (p / h) : 0;
+        const safe = h > 0 && pct >= 0.75 ? Math.floor((p - 0.75 * h) / 0.75) : 0;
+        const need = h > 0 && pct < 0.75 ? Math.ceil((0.75 * h - p) / 0.25) : 0;
+        thT.innerHTML += `<tr><td class="p-2 font-bold">${s.code}</td><td class="p-2">${s.name}</td><td class="p-2 text-center">${s.scheduled}</td><td class="p-2 text-center font-bold">${h}</td><td class="p-2 text-center text-emerald-600 font-bold">${p}</td><td class="p-2 text-center text-rose-600 font-bold">${h-p}</td><td class="p-2 text-center font-black ${pct>=0.75?'text-emerald-600':'text-rose-600'}">${(pct*100).toFixed(1)}%</td><td class="p-2 text-center text-blue-600 font-bold">${safe}</td><td class="p-2 text-center text-amber-600 font-bold">${need}</td><td class="p-2 text-center text-indigo-600 font-bold">${Math.max(0, s.scheduled - h)}</td></tr>`;
+      });
+
+      const prT = document.getElementById("practicalTrackerBody"); prT.innerHTML = "";
+      practicalSubjects.forEach(s => {
+        let h = 0, p = 0;
+        Object.values(practicalAttendance).forEach(d => { if (d[s.code] === "P") { h++; p++; } else if (d[s.code] === "A") h++; });
+        totH += h; totP += p;
+        const pct = h > 0 ? (p / h) : 0;
+        const safe = h > 0 && pct >= 0.75 ? Math.floor((p - 0.75 * h) / 0.75) : 0;
+        const need = h > 0 && pct < 0.75 ? Math.ceil((0.75 * h - p) / 0.25) : 0;
+        prT.innerHTML += `<tr><td class="p-2 font-bold">${s.code}</td><td class="p-2">${s.name}</td><td class="p-2 text-center">${s.scheduled}</td><td class="p-2 text-center font-bold">${h}</td><td class="p-2 text-center text-emerald-600 font-bold">${p}</td><td class="p-2 text-center text-rose-600 font-bold">${h-p}</td><td class="p-2 text-center font-black ${pct>=0.75?'text-emerald-600':'text-rose-600'}">${(pct*100).toFixed(1)}%</td><td class="p-2 text-center text-blue-600 font-bold">${safe}</td><td class="p-2 text-center text-amber-600 font-bold">${need}</td><td class="p-2 text-center text-indigo-600 font-bold">${Math.max(0, s.scheduled - h)}</td></tr>`;
+      });
+
+      document.getElementById("kpiHeld").innerText = totH;
+      document.getElementById("kpiAttended").innerText = totP;
+      document.getElementById("kpiAbsent").innerText = totH - totP;
+      document.getElementById("kpiRemaining").innerText = Math.max(0, 149 - totH);
+      const overall = totH > 0 ? ((totP / totH) * 100).toFixed(1) : 0;
+      document.getElementById("kpiPercent").innerText = overall + "%";
+      const st = document.getElementById("kpiStatus");
+      if (totH === 0) { st.innerText = "NO CLASSES"; st.className = "text-[10px] font-black text-slate-400"; }
+      else if (overall >= 75) { st.innerText = "ELIGIBLE (>=75%)"; st.className = "text-[10px] font-black text-emerald-600"; }
+      else { st.innerText = "SHORTAGE (<75%)"; st.className = "text-[10px] font-black text-rose-600"; }
+
+      updateLive();
+    }
+
+    function checkMissed() {
+      const today = new Date(); today.setHours(23, 59, 59, 999);
+      let list = [];
+      calendarDates.forEach(dt => {
+        if (dt < today) {
+          const dStr = dt.toISOString().split("T")[0]; const sc = getSched(dt);
+          theorySubjects.forEach(s => { if (sc.th[s.code] && !theoryAttendance[dStr]?.[s.code]) list.push({ type: 'th', dStr, code: s.code }); });
+          practicalSubjects.forEach(s => { if (sc.pr[s.code] && !practicalAttendance[dStr]?.[s.code]) list.push({ type: 'pr', dStr, code: s.code }); });
+        }
+      });
+      const bar = document.getElementById("missedAlertBar");
+      if (list.length > 0) {
+        bar.classList.remove("hidden");
+        document.getElementById("missedAlertText").innerText = `${list.length} unmarked past classes!`;
+        window._pending = list;
+      } else bar.classList.add("hidden");
+    }
+
+    function openMissedModal() {
+      const m = document.getElementById("missedModal"); const cont = document.getElementById("missedListContent");
+      m.classList.remove("hidden"); cont.innerHTML = "";
+      (window._pending || []).slice(0, 20).forEach(i => {
+        cont.innerHTML += `<div class="p-2 bg-slate-50 border rounded-xl flex justify-between items-center"><span><b>${i.code}</b> (${i.dStr})</span><div class="flex gap-1"><button onclick="setAttd('${i.type}','${i.dStr}','${i.code}','P'); checkMissed(); openMissedModal();" class="px-2 py-1 bg-emerald-600 text-white rounded font-bold">P</button><button onclick="setAttd('${i.type}','${i.dStr}','${i.code}','A'); checkMissed(); openMissedModal();" class="px-2 py-1 bg-rose-600 text-white rounded font-bold">A</button><button onclick="setAttd('${i.type}','${i.dStr}','${i.code}','NA'); checkMissed(); openMissedModal();" class="px-2 py-1 bg-amber-500 text-white rounded font-bold">NA</button></div></div>`;
+      });
+    }
+    function closeMissedModal() { document.getElementById("missedModal").classList.add("hidden"); }
+
+    function exportToExcelFile() {
+      const wb = XLSX.utils.book_new();
+      const thRows = [["Date", "BSM 101", "BSM 104", "RCS 101", "RCM 101", "RAI 101"]];
+      calendarDates.forEach(dt => {
+        const d = dt.toISOString().split("T")[0]; const r = theoryAttendance[d] || {};
+        thRows.push([d, r["BSM 101"]||"", r["BSM 104"]||"", r["RCS 101"]||"", r["RCM 101"]||"", r["RAI 101"]||""]);
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(thRows), "Theory");
+      XLSX.writeFile(wb, "FET_Attendance.xlsx");
+    }
+
+    function downloadPDFReport() {
+      const { jsPDF } = window.jspdf; const doc = new jsPDF();
+      doc.text("FET Lucknow AI-3 P1 Attendance Report", 14, 15);
+      doc.save("Attendance_Report.pdf");
+    }
+
+    setInterval(updateLive, 30000);
+    render();
+  </script>
+</body>
+</html>
